@@ -273,6 +273,12 @@ tfoot td{position:sticky;bottom:0;background:var(--bg);font-weight:600;border-to
 
 // ===================== Dashboard =====================
 function client(D) {
+  if (!D.dates || !D.dates.length) {
+    document.querySelector('main').innerHTML = '<div class="intro" style="padding:64px 0"><p style="font-size:16px;color:var(--ink)"><b>No reports yet.</b></p>' +
+      '<p style="margin-top:8px">Upload a daily aging file named like <b>AR_Aging_2026-10-14.xlsx</b> into the <b>reports</b> folder of your ar-data repository. The dashboard updates about a minute later.</p></div>';
+    document.querySelector('#sel').disabled = true;
+    return;
+  }
   const BK = ['Current', '1–30', '31–60', '61–90', '91–120', '120+'];
   const BKL = ['Not yet due', '1–30 days overdue', '31–60 days overdue', '61–90 days overdue', '91–120 days overdue', 'More than 120 days overdue'];
   const bOf = d => d <= 0 ? 0 : d <= 30 ? 1 : d <= 60 ? 2 : d <= 90 ? 3 : d <= 120 ? 4 : 5;
