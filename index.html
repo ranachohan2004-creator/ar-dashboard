@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AR aging – locked</title>
+<script>/* apply the saved light/dark choice before the page paints */
+try { var t = localStorage.getItem('ar-theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ================= Tokens ================= */
+:root{color-scheme:light;
+ --bg:#f7f8f7;--surface:#ffffff;--ink:#17212b;--ink2:#55606b;--muted:#87909a;--rule:#e2e5e4;--rule2:#c9cecd;
+ --accent:#1f5f99;--accent-ink:#ffffff;--hover:rgba(23,33,43,.04);--shadow:0 10px 30px rgba(23,33,43,.12);
+ --s1:#2a78d6;--s2:#e47a35;--good:#13773b;--bad:#c0392b;
+ --f0:#1baf7a;--f1:#f0a050;--f2:#e47a35;--f3:#d0552a;--f4:#a93a24;--f5:#74201a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+ --bg:#10151a;--surface:#161d24;--ink:#e7ebee;--ink2:#a9b3bc;--muted:#7c8790;--rule:#26303a;--rule2:#36424d;
+ --accent:#6aa7e8;--accent-ink:#0f1a26;--hover:rgba(255,255,255,.04);--shadow:0 10px 30px rgba(0,0,0,.45);
+ --s1:#3987e5;--s2:#ef8f4a;--good:#3fbf6f;--bad:#e66767;
+ --f0:#199e70;--f1:#f0b25a;--f2:#eb8a40;--f3:#e2653a;--f4:#d14638;--f5:#b02e2e}}
+:root[data-theme="dark"]{color-scheme:dark;
+ --bg:#10151a;--surface:#161d24;--ink:#e7ebee;--ink2:#a9b3bc;--muted:#7c8790;--rule:#26303a;--rule2:#36424d;
+ --accent:#6aa7e8;--accent-ink:#0f1a26;--hover:rgba(255,255,255,.04);--shadow:0 10px 30px rgba(0,0,0,.45);
+ --s1:#3987e5;--s2:#ef8f4a;--good:#3fbf6f;--bad:#e66767;
+ --f0:#199e70;--f1:#f0b25a;--f2:#eb8a40;--f3:#e2653a;--f4:#d14638;--f5:#b02e2e}
+
+/* ================= Base ================= */
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+ -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 0}
+.num,table,.mv,.lgc b{font-variant-numeric:tabular-nums}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+[hidden]{display:none!important}
+.wrap{max-width:1320px;margin:0 auto;padding:0 32px}
+
+/* ================= Top bar ================= */
+.top{border-bottom:1px solid var(--rule);background:var(--bg)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+.brand{display:flex;flex-direction:column;line-height:1.25}
+.brand .co{font-size:12px;color:var(--muted)}
+.brand h1{margin:0;font-size:16px;font-weight:600;letter-spacing:-.005em}
+.tools{display:flex;align-items:center;gap:8px}
+.tools label{font-size:13px;color:var(--ink2);margin-right:2px}
+select{appearance:none;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2387909a' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center;
+ border:1px solid var(--rule2);border-radius:8px;padding:7px 30px 7px 11px;font-size:13px;cursor:pointer}
+.ib{display:inline-grid;place-items:center;height:34px;min-width:34px;padding:0 10px;border:1px solid var(--rule2);border-radius:8px;
+ background:var(--surface);font-size:13px;cursor:pointer;color:var(--ink2)}
+.ib:hover{color:var(--ink);border-color:var(--muted)}
+.ib svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ================= Headline ================= */
+.intro{padding:28px 0 6px}
+.intro p{margin:0;color:var(--ink2);font-size:14px}
+.intro p b{color:var(--ink);font-weight:600}
+
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);margin:18px 0 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.m{padding:18px 20px 16px;border-left:1px solid var(--rule)}
+.m:first-child{border-left:0;padding-left:0}
+.ml{font-size:13px;color:var(--ink2)}
+.mv{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:6px 0 4px}
+.ms{font-size:12.5px;color:var(--muted)}
+.md{font-size:12.5px;margin-top:6px;color:var(--muted)}
+.md b{font-weight:600}.md .bad{color:var(--bad)}.md .good{color:var(--good)}.md .neu{color:var(--ink2)}
+
+/* ================= Aging strip (signature element) ================= */
+.sec{padding:30px 0 6px}
+.sh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.sh h2{margin:0;font-size:16px;font-weight:600;letter-spacing:-.005em}
+.sh .sub{font-size:13px;color:var(--muted)}
+.bar{display:flex;gap:3px;height:34px;border-radius:7px;overflow:hidden}
+.bar span{min-width:3px;cursor:default}
+.bar.grow{animation:grow .7s cubic-bezier(.2,.7,.2,1) both;transform-origin:left}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:reduce){.bar.grow{animation:none}}
+.lg6{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin-top:14px}
+.lgc{padding:2px 14px 2px 0;display:flex;flex-direction:column;gap:2px}
+.lgc .k{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2)}
+.lgc b{font-size:17px;font-weight:600}
+.lgc .p{font-size:12.5px;color:var(--muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}
+.f0{fill:var(--f0);background:var(--f0)}.f1{fill:var(--f1);background:var(--f1)}.f2{fill:var(--f2);background:var(--f2)}
+.f3{fill:var(--f3);background:var(--f3)}.f4{fill:var(--f4);background:var(--f4)}.f5{fill:var(--f5);background:var(--f5)}
+
+/* ================= Two-column charts ================= */
+.cols{display:grid;grid-template-columns:7fr 5fr;gap:48px;border-top:1px solid var(--rule);margin-top:26px}
+.cols>.sec{min-width:0}
+.lg{display:flex;gap:16px;font-size:13px;color:var(--ink2)}
+.lg span{display:inline-flex;align-items:center;gap:7px}
+.ln-sw{display:inline-block;width:16px;height:3px;border-radius:2px}
+svg{display:block;overflow:visible}
+svg text{font-family:inherit}
+.grid{stroke:var(--rule);stroke-width:1}.base{stroke:var(--rule2);stroke-width:1}
+.tick{fill:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+.yl{fill:var(--ink2);font-size:12.5px}
+.val{fill:var(--ink2);font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}
+.endl{fill:var(--ink2);font-size:12px;font-weight:500}
+.ln{fill:none;stroke-width:2.25;stroke-linejoin:round;stroke-linecap:round}
+.ln.s1{stroke:var(--s1)}.ln.s2{stroke:var(--s2)}
+.dot{stroke:var(--bg);stroke-width:2}.dot.s1{fill:var(--s1)}.dot.s2{fill:var(--s2)}
+.selline{stroke:var(--rule2);stroke-dasharray:3 3}.cross{stroke:var(--ink2);stroke-width:1;opacity:.45}
+.hit{fill:transparent}.hit.row:hover{fill:var(--hover)}
+
+/* ================= Tabs + tables ================= */
+.tabsec{border-top:1px solid var(--rule);margin-top:26px;padding:22px 0 0}
+.tabbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--rule)}
+.tabs{display:flex;gap:24px}
+.tab{background:none;border:0;padding:8px 0 11px;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab .c{font-size:12.5px;color:var(--muted);margin-left:6px;font-weight:400}
+.search{margin-bottom:8px;width:240px;padding:7px 11px;border:1px solid var(--rule2);border-radius:8px;background:var(--surface);font-size:13px}
+.tw{overflow:auto;max-height:560px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{position:sticky;top:0;z-index:1;background:var(--bg);color:var(--ink2);font-size:12.5px;font-weight:500;text-align:left;
+ padding:11px 12px;border-bottom:1px solid var(--rule2);white-space:nowrap}
+th.s{cursor:pointer;user-select:none}th.s:hover{color:var(--ink)}
+th .sw{margin-right:6px;vertical-align:-1px;width:8px;height:8px}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);white-space:nowrap}
+tbody tr:hover td{background:var(--hover)}
+th:first-child,td:first-child{padding-left:0}
+.n{text-align:right}.b{font-weight:600}
+td.nm{max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.z{color:var(--rule2)}
+tfoot td{position:sticky;bottom:0;background:var(--bg);font-weight:600;border-top:1px solid var(--rule2);border-bottom:0}
+.pb{display:inline-flex;align-items:center;gap:10px;justify-content:flex-end}
+.pbt{display:inline-block;width:64px;height:5px;border-radius:3px;background:var(--rule);overflow:hidden}.pbt i{display:block;height:100%}
+.days{display:inline-flex;align-items:center;gap:7px;justify-content:flex-end;font-weight:500}
+.new{font-size:12px;color:var(--accent)}
+.up{color:var(--bad)}.dn{color:var(--good)}
+.empty{text-align:center;color:var(--muted);padding:28px}
+
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);padding:22px 0 36px}
+
+/* ================= Tooltip ================= */
+#tip{position:fixed;display:none;pointer-events:none;z-index:20;background:var(--surface);color:var(--ink);border:1px solid var(--rule2);
+ border-radius:8px;padding:10px 12px;font-size:12.5px;box-shadow:var(--shadow);min-width:190px}
+#tip .th{font-weight:600;margin-bottom:6px}
+#tip .tr{display:flex;align-items:center;gap:8px;padding:2px 0}#tip .tr span{color:var(--ink2);flex:1}
+#tip .tr b{font-weight:600;font-variant-numeric:tabular-nums}
+#tip .tsep{border-top:1px solid var(--rule);margin:6px 0}#tip .hint{color:var(--muted);margin-top:6px}
+
+/* ================= Lock screen ================= */
+#lock{min-height:100vh;display:flex;flex-direction:column}
+#lock .lt{display:flex;justify-content:flex-end;padding:16px 20px}
+#lock .lc{flex:1;display:grid;place-items:center;padding:24px}
+.lk{width:100%;max-width:360px}
+.lk .mark{display:flex;gap:3px;height:6px;width:96px;border-radius:3px;overflow:hidden;margin-bottom:22px}
+.lk .mark i{flex:1}
+.lk h1{font-size:22px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
+.lk p{margin:0 0 22px;color:var(--ink2)}
+.lk label{display:block;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.lk input[type=password]{width:100%;padding:10px 12px;border:1px solid var(--rule2);border-radius:8px;background:var(--surface);font-size:15px}
+.lk .rm{display:flex;align-items:center;gap:8px;margin:14px 0 18px;color:var(--ink2);font-size:13.5px}
+.lk .go{width:100%;padding:11px;border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:14.5px;cursor:pointer}
+.lk .go:disabled{opacity:.6;cursor:wait}
+.lk .err{color:var(--bad);font-size:13px;min-height:20px;margin-top:12px}
+
+/* ================= Responsive ================= */
+@media (max-width:1080px){
+ .metrics{grid-template-columns:repeat(3,1fr)}
+ .m:nth-child(4){border-left:0;padding-left:0}
+ .m:nth-child(n+4){border-top:1px solid var(--rule)}
+ .cols{grid-template-columns:1fr;gap:0}
+ .cols>.sec+.sec{border-top:1px solid var(--rule)}
+}
+@media (max-width:640px){
+ .wrap{padding:0 16px}
+ .metrics{grid-template-columns:1fr 1fr}
+ .m{padding:14px 12px 12px}
+ .m:nth-child(odd){border-left:0;padding-left:0}.m:nth-child(even){border-left:1px solid var(--rule)}
+ .m:nth-child(n+3){border-top:1px solid var(--rule)}
+ .mv{font-size:24px}
+ .lg6{grid-template-columns:repeat(3,1fr);row-gap:12px}
+ .tools label{display:none}
+ .search{width:100%}
+}
+</style></head><body>
+
+<!-- ===================== Lock screen ===================== -->
+<div id="lock" hidden>
+ <div class="lt"><button class="ib themebtn" type="button"></button></div>
+ <div class="lc">
+  <form class="lk" id="uform" autocomplete="on">
+   <div class="mark" aria-hidden="true"><i class="f0"></i><i class="f1"></i><i class="f2"></i><i class="f3"></i><i class="f4"></i><i class="f5"></i></div>
+   <h1>Receivables aging</h1>
+   <p>Enter the password to open the dashboard.</p>
+   <input type="text" name="username" value="ar-dashboard" autocomplete="username" hidden>
+   <label for="pw">Password</label>
+   <input type="password" id="pw" autocomplete="current-password" required>
+   <label class="rm"><input type="checkbox" id="rm"> Remember on this device</label>
+   <button class="go" id="ubtn" type="submit">Open dashboard</button>
+   <div class="err" id="uerr" role="alert"></div>
+  </form>
+ </div>
+</div>
+
+<!-- ===================== Dashboard ===================== -->
+<div id="app" hidden>
+ <header class="top"><div class="wrap">
+  <div class="brand"><span class="co" id="co" hidden></span><h1>Receivables aging</h1></div>
+  <div class="tools">
+   <label for="sel">Report date</label><select id="sel"></select>
+   <button class="ib themebtn" type="button"></button>
+   <button class="ib" id="lockbtn" type="button" title="Lock the dashboard and forget this device">Lock</button>
+  </div>
+ </div></header>
+
+ <main class="wrap">
+  <div class="intro"><p id="lead"></p></div>
+  <section class="metrics" id="kpis" aria-label="Key figures"></section>
+
+  <section class="sec" aria-labelledby="h-age">
+   <div class="sh"><h2 id="h-age">Aging of the outstanding balance</h2><span class="sub">Days past due on the report date</span></div>
+   <div id="strip"></div>
+   <div class="lg6" id="stripLg"></div>
+  </section>
+
+  <div class="cols">
+   <section class="sec" aria-labelledby="h-trend">
+    <div class="sh"><h2 id="h-trend">Balance over time</h2>
+     <div class="lg"><span><i class="ln-sw" style="background:var(--s1)"></i>Outstanding</span><span><i class="ln-sw" style="background:var(--s2)"></i>Overdue</span></div></div>
+    <div id="trend"></div>
+   </section>
+   <section class="sec" aria-labelledby="h-cust">
+    <div class="sh"><h2 id="h-cust">Largest balances</h2><span class="sub">Top 8 customers, split by age</span></div>
+    <div id="cust"></div>
+   </section>
+  </div>
+
+  <section class="tabsec">
+   <div class="tabbar">
+    <div class="tabs" role="tablist">
+     <button class="tab" role="tab" id="t-cust" aria-controls="p-cust" aria-selected="true">Customers<span class="c" id="nCust"></span></button>
+     <button class="tab" role="tab" id="t-inv" aria-controls="p-inv" aria-selected="false">Overdue invoices<span class="c" id="nInv"></span></button>
+    </div>
+    <input class="search" id="q" type="search" placeholder="Search customer or invoice" aria-label="Search customer or invoice">
+   </div>
+   <div class="tw" id="p-cust" role="tabpanel" aria-labelledby="t-cust"><table><thead id="thead"></thead><tbody id="tbody"></tbody><tfoot id="tfoot"></tfoot></table></div>
+   <div class="tw" id="p-inv" role="tabpanel" aria-labelledby="t-inv" hidden><table>
+    <thead><tr><th>Invoice</th><th>Customer</th><th class="n">Amount due</th><th class="n">Days overdue</th><th>Age group</th></tr></thead>
+    <tbody id="ibody"></tbody></table></div>
+  </section>
+
+  <footer class="foot"><span id="days"></span><span id="gen"></span></footer>
+ </main>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+// ===================== Light / dark switch =====================
+(function () {
+  const root = document.documentElement, mq = matchMedia('(prefers-color-scheme: dark)');
+  const MOON = '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+  const SUN = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></svg>';
+  const current = () => root.getAttribute('data-theme') || (mq.matches ? 'dark' : 'light');
+  const paint = () => document.querySelectorAll('.themebtn').forEach(b => {
+    const dark = current() === 'dark';
+    b.innerHTML = dark ? SUN : MOON;
+    b.setAttribute('aria-label', dark ? 'Switch to day mode' : 'Switch to night mode');
+    b.title = dark ? 'Day mode' : 'Night mode';
+  });
+  document.querySelectorAll('.themebtn').forEach(b => b.addEventListener('click', () => {
+    const next = current() === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('ar-theme', next); } catch (e) {}
+    paint();
+  }));
+  mq.addEventListener && mq.addEventListener('change', paint);
+  paint();
+})();
+
+// ===================== Dashboard =====================
+function client(D) {
+  const BK = ['Current', '1–30', '31–60', '61–90', '91–120', '120+'];
+  const BKL = ['Not yet due', '1–30 days overdue', '31–60 days overdue', '61–90 days overdue', '91–120 days overdue', 'More than 120 days overdue'];
+  const bOf = d => d <= 0 ? 0 : d <= 30 ? 1 : d <= 60 ? 2 : d <= 90 ? 3 : d <= 120 ? 4 : 5;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fk = n => { const a = Math.abs(n), s = n < 0 ? '−' : '';
+    return s + D.cur + (a >= 1e9 ? (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? (a / 1e6).toFixed(2) + 'M' : a >= 1e3 ? (a / 1e3).toFixed(1) + 'K' : a.toFixed(0)); };
+  const ff = n => (n < 0 ? '−' : '') + D.cur + Math.round(Math.abs(n)).toLocaleString('en-US');
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const fd = s => { const [y, m, d] = s.split('-'); return +d + ' ' + MON[m - 1] + ' ' + y; };
+  const fds = s => { const [, m, d] = s.split('-'); return +d + ' ' + MON[m - 1]; };
+  const pct = (a, b) => b ? a / b * 100 : 0;
+  const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+
+  // ---- statistics for every report date ----
+  const S = D.dates.map(() => ({ rows: [] }));
+  D.R.forEach(r => S[r[0]].rows.push(r));
+  S.forEach(s => {
+    Object.assign(s, { total: 0, overdue: 0, over90: 0, wsum: 0, odCount: 0, bk: [0, 0, 0, 0, 0, 0], bkN: [0, 0, 0, 0, 0, 0], cust: new Map() });
+    for (const [, ci, a, o] of s.rows) {
+      const b = bOf(o);
+      s.total += a; s.bk[b] += a; s.bkN[b]++;
+      if (o > 0) { s.overdue += a; s.wsum += a * o; s.odCount++; }
+      if (o > 90) s.over90 += a;
+      let c = s.cust.get(ci);
+      if (!c) s.cust.set(ci, c = { ci, name: D.custs[ci], total: 0, od: 0, n: 0, bk: [0, 0, 0, 0, 0, 0] });
+      c.total += a; c.bk[b] += a; c.n++; if (o > 0) c.od += a;
+    }
+    s.wavg = s.overdue ? s.wsum / s.overdue : 0;
+    s.odCust = [...s.cust.values()].filter(c => c.od > 0).length;
+  });
+
+  let sel = D.dates.length - 1, sortKey = 'total', sortDir = -1, query = '', first = true;
+
+  // ---- tooltip ----
+  const tip = $('#tip');
+  const showTip = (e, html) => {
+    tip.innerHTML = html; tip.style.display = 'block';
+    const r = tip.getBoundingClientRect();
+    let x = e.clientX + 14, y = e.clientY + 14;
+    if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+    if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+    tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+  };
+  const hideTip = () => { tip.style.display = 'none'; };
+  const tRow = (sw, label, value) => `<div class="tr">${sw ? `<i class="sw ${sw}"></i>` : ''}<span>${label}</span><b>${value}</b></div>`;
+
+  // ---- SVG helpers ----
+  const NS = 'http://www.w3.org/2000/svg';
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  const txt = (p, x, y, s, cls, anchor) => { const t = mk('text', { x, y, class: cls || '', 'text-anchor': anchor || 'start' }, p); t.textContent = s; return t; };
+  const nice = (max, n) => {
+    if (max <= 0) return { top: 1, step: 1 };
+    const raw = max / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
+    const step = (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p;
+    return { top: Math.ceil(max / step) * step, step };
+  };
+  const svgFor = (host, H, label) => { host.innerHTML = ''; const W = Math.max(280, host.clientWidth);
+    return { W, g: mk('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': label }, host) }; };
+
+  // ---- lead sentence + key figures ----
+  function drawHead(s, p) {
+    $('#lead').innerHTML = `Report of <b>${fd(D.dates[sel])}</b>` + (p ? `, compared with ${fd(D.dates[sel - 1])}.` : '. This is the first report, so there is nothing to compare with yet.');
+    const pd = p ? fds(D.dates[sel - 1]) : '';
+    const delta = (now, before, kind, f) => {
+      if (!p) return '&nbsp;';
+      const ch = now - before;
+      if (Math.abs(ch) < 0.5) return `No change since ${pd}`;
+      const up = ch > 0, cls = kind === 'neutral' ? 'neu' : (up ? 'bad' : 'good');
+      return `<b class="${cls}">${up ? '▲' : '▼'} ${f(Math.abs(ch))}</b> since ${pd}`;
+    };
+    const days = v => { const d = Math.round(v); return d + (d === 1 ? ' day' : ' days'); };
+    const M = [
+      ['Total outstanding', fk(s.total), `${plural(s.rows.length, 'open invoice')}`, delta(s.total, p && p.total, 'neutral', fk), ff(s.total)],
+      ['Overdue', fk(s.overdue), `${pct(s.overdue, s.total).toFixed(1)}% of the total`, delta(s.overdue, p && p.overdue, 'upbad', fk), ff(s.overdue)],
+      ['Over 90 days', fk(s.over90), `${pct(s.over90, s.total).toFixed(1)}% of the total`, delta(s.over90, p && p.over90, 'upbad', fk), ff(s.over90)],
+      ['Average days overdue', days(s.wavg), 'Weighted by amount', delta(s.wavg, p && p.wavg, 'upbad', days), 'Weighted by overdue amount'],
+      ['Customers overdue', String(s.odCust), `of ${s.cust.size} customers`, delta(s.odCust, p && p.odCust, 'upbad', String), `${s.odCount} overdue invoices`],
+    ];
+    $('#kpis').innerHTML = M.map(([l, v, sub, d, t]) =>
+      `<div class="m" title="${esc(t)}"><div class="ml">${l}</div><div class="mv">${v}</div><div class="ms">${sub}</div><div class="md">${d}</div></div>`).join('');
+  }
+
+  // ---- aging strip ----
+  function drawStrip(s) {
+    const host = $('#strip');
+    host.innerHTML = `<div class="bar${first ? ' grow' : ''}" role="img" aria-label="Outstanding balance split by age group">` +
+      s.bk.map((v, i) => v > 0 ? `<span class="f${i}" data-i="${i}" style="flex:${v} 1 0"></span>` : '').join('') + '</div>';
+    if (!s.total) host.firstChild.innerHTML = '<span style="flex:1;background:var(--rule)"></span>';
+    host.querySelectorAll('span[data-i]').forEach(sp => {
+      const i = +sp.dataset.i;
+      sp.addEventListener('mousemove', e => showTip(e, `<div class="th">${BKL[i]}</div>` + tRow('f' + i, 'Balance', ff(s.bk[i])) +
+        tRow('', 'Share of total', pct(s.bk[i], s.total).toFixed(1) + '%') + tRow('', 'Invoices', s.bkN[i])));
+      sp.addEventListener('mouseleave', hideTip);
+    });
+    $('#stripLg').innerHTML = s.bk.map((v, i) =>
+      `<div class="lgc"><span class="k"><i class="sw f${i}"></i>${BK[i]}</span><b>${fk(v)}</b><span class="p">${pct(v, s.total).toFixed(0)}%, ${plural(s.bkN[i], 'invoice')}</span></div>`).join('');
+  }
+
+  // ---- trend ----
+  function drawTrend() {
+    const H = 250, m = { t: 12, r: 84, b: 30, l: 52 };
+    const { W, g } = svgFor($('#trend'), H, 'Outstanding and overdue balance for each report date');
+    const n = D.dates.length, iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const { top, step } = nice(Math.max(...S.map(s => s.total)), 4);
+    const x = i => n === 1 ? m.l + iw / 2 : m.l + i / (n - 1) * iw;
+    const y = v => m.t + ih - v / top * ih;
+    for (let v = 0; v <= top + 1e-9; v += step) {
+      mk('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: v ? 'grid' : 'base' }, g);
+      txt(g, m.l - 10, y(v) + 4, fk(v), 'tick', 'end');
+    }
+    const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 70))));
+    for (let i = 0; i < n; i++) if ((n - 1 - i) % every === 0) txt(g, x(i), H - m.b + 20, fds(D.dates[i]), 'tick', 'middle');
+    mk('line', { x1: x(sel), x2: x(sel), y1: m.t, y2: m.t + ih, class: 'selline' }, g);
+    const gr = mk('linearGradient', { id: 'gOd', x1: 0, x2: 0, y1: 0, y2: 1 }, mk('defs', {}, g));
+    mk('stop', { offset: '0%', style: 'stop-color:var(--s2);stop-opacity:.22' }, gr);
+    mk('stop', { offset: '100%', style: 'stop-color:var(--s2);stop-opacity:0' }, gr);
+    const SER = [{ k: 'total', c: 's1' }, { k: 'overdue', c: 's2' }];
+    SER.forEach(sr => {
+      if (n > 1) {
+        const line = S.map((s, i) => (i ? 'L' : 'M') + x(i) + ',' + y(s[sr.k])).join('');
+        if (sr.c === 's2') mk('path', { d: line + `L${x(n - 1)},${y(0)}L${x(0)},${y(0)}Z`, fill: 'url(#gOd)' }, g);
+        mk('path', { d: line, class: 'ln ' + sr.c }, g);
+      }
+      mk('circle', { cx: x(sel), cy: y(S[sel][sr.k]), r: 4.5, class: 'dot ' + sr.c }, g);
+    });
+    let y1 = y(S[n - 1].total), y2 = y(S[n - 1].overdue);
+    if (Math.abs(y1 - y2) < 15) { const mid = (y1 + y2) / 2; y1 = mid - 7.5; y2 = mid + 7.5; }
+    const ex = n === 1 ? x(0) + 12 : W - m.r + 10;
+    txt(g, ex, y1 + 4, 'Outstanding', 'endl'); txt(g, ex, y2 + 4, 'Overdue', 'endl');
+    const cross = mk('line', { x1: 0, x2: 0, y1: m.t, y2: m.t + ih, class: 'cross', visibility: 'hidden' }, g);
+    const hd = SER.map(sr => mk('circle', { r: 4.5, class: 'dot ' + sr.c, visibility: 'hidden' }, g));
+    const ov = mk('rect', { x: m.l - 6, y: m.t, width: iw + 12, height: ih, class: 'hit', style: 'cursor:pointer' }, g);
+    const idx = e => { const r = g.getBoundingClientRect();
+      return n === 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round((e.clientX - r.left - m.l) / iw * (n - 1)))); };
+    ov.addEventListener('mousemove', e => {
+      const i = idx(e), s = S[i];
+      cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('visibility', 'visible');
+      SER.forEach((sr, j) => { hd[j].setAttribute('cx', x(i)); hd[j].setAttribute('cy', y(s[sr.k])); hd[j].setAttribute('visibility', 'visible'); });
+      showTip(e, `<div class="th">${fd(D.dates[i])}</div>` + tRow('', 'Outstanding', ff(s.total)) + tRow('', 'Overdue', ff(s.overdue)) +
+        tRow('', 'Share overdue', pct(s.overdue, s.total).toFixed(1) + '%') + (i !== sel ? '<div class="hint">Click to open this report</div>' : ''));
+    });
+    ov.addEventListener('mouseleave', () => { hideTip(); cross.setAttribute('visibility', 'hidden'); hd.forEach(d => d.setAttribute('visibility', 'hidden')); });
+    ov.addEventListener('click', e => { sel = idx(e); hideTip(); render(); });
+  }
+
+  // ---- largest balances ----
+  function drawCust(s) {
+    const list = [...s.cust.values()].sort((a, b) => b.total - a.total).slice(0, 8);
+    const host = $('#cust'), rowH = 30, lw = Math.min(160, Math.max(104, host.clientWidth * 0.34));
+    const m = { t: 2, r: 58, b: 2, l: lw };
+    const { W, g } = svgFor(host, m.t + m.b + Math.max(1, list.length) * rowH, 'Largest customer balances split by age group');
+    const iw = W - m.l - m.r, max = list.length ? list[0].total : 1;
+    list.forEach((c, j) => {
+      const yy = m.t + j * rowH, bh = 12, by = yy + (rowH - bh) / 2;
+      const maxCh = Math.max(8, Math.floor((m.l - 14) / 6.8));
+      txt(g, m.l - 12, by + 10, c.name.length > maxCh ? c.name.slice(0, maxCh - 1) + '…' : c.name, 'yl', 'end');
+      let x0 = m.l;
+      c.bk.forEach((v, i) => { if (!v) return; const w = v / max * iw;
+        mk('rect', { x: x0, y: by, width: Math.max(1, w - 2), height: bh, rx: 2, class: 'f' + i }, g); x0 += w; });
+      txt(g, x0 + 6, by + 10, fk(c.total), 'val');
+      const hit = mk('rect', { x: 0, y: yy, width: W, height: rowH, class: 'hit row' }, g);
+      hit.addEventListener('mousemove', e => showTip(e, `<div class="th">${esc(c.name)}</div>` +
+        c.bk.map((v, i) => v ? tRow('f' + i, BK[i], ff(v)) : '').join('') + '<div class="tsep"></div>' +
+        tRow('', 'Total', ff(c.total)) + tRow('', 'Overdue', pct(c.od, c.total).toFixed(0) + '%')));
+      hit.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  // ---- customers table ----
+  const COLS = [{ k: 'name', l: 'Customer' }, { k: 'total', l: 'Total' }, ...BK.map((b, i) => ({ k: 'b' + i, l: b, sw: 'f' + i })),
+    { k: 'pct', l: 'Overdue share' }, { k: 'chg', l: 'Change' }];
+  $('#thead').innerHTML = '<tr>' + COLS.map(c =>
+    `<th data-k="${c.k}" class="s${c.k === 'name' ? '' : ' n'}" tabindex="0">${c.sw ? `<i class="sw ${c.sw}"></i>` : ''}${c.l}<span class="ar"></span></th>`).join('') + '</tr>';
+  document.querySelectorAll('#thead th').forEach(th => {
+    const go = () => { const k = th.dataset.k; sortDir = sortKey === k ? -sortDir : (k === 'name' ? 1 : -1); sortKey = k; drawTables(); };
+    th.addEventListener('click', go); th.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  });
+  const shareColor = v => v >= 75 ? 'f5' : v >= 50 ? 'f4' : v >= 25 ? 'f2' : v > 0 ? 'f1' : 'f0';
+
+  function drawTables() {
+    const s = S[sel], p = sel > 0 ? S[sel - 1] : null, q = query.trim().toLowerCase();
+    const chg = c => p ? c.total - ((p.cust.get(c.ci) || {}).total || 0) : 0;
+    const val = c => sortKey === 'name' ? c.name.toLowerCase() : sortKey === 'pct' ? pct(c.od, c.total)
+      : sortKey === 'chg' ? chg(c) : sortKey[0] === 'b' ? c.bk[+sortKey.slice(1)] : c[sortKey];
+    const list = [...s.cust.values()].filter(c => c.name.toLowerCase().includes(q))
+      .sort((a, b) => { const A = val(a), B = val(b); return (A < B ? -1 : A > B ? 1 : 0) * sortDir; });
+    const cell = v => v ? ff(v) : '<span class="z">–</span>';
+    const chgCell = c => {
+      if (!p) return '<span class="z">–</span>';
+      if (!p.cust.has(c.ci)) return '<span class="new">New</span>';
+      const d = chg(c); if (Math.abs(d) < 0.5) return '<span class="z">–</span>';
+      return `<span class="${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲' : '▼'}</span> ${ff(Math.abs(d))}`;
+    };
+    $('#tbody').innerHTML = list.map(c => { const sh = pct(c.od, c.total);
+      return `<tr><td class="nm" title="${esc(c.name)}">${esc(c.name)}</td><td class="n b">${ff(c.total)}</td>` +
+        c.bk.map(v => `<td class="n">${cell(v)}</td>`).join('') +
+        `<td class="n"><span class="pb"><span class="pbt"><i class="${shareColor(sh)}" style="width:${sh.toFixed(0)}%"></i></span>${sh.toFixed(0)}%</span></td>` +
+        `<td class="n">${chgCell(c)}</td></tr>`; }).join('')
+      || '<tr><td colspan="10" class="empty">No customer matches your search.</td></tr>';
+    const t = list.reduce((a, c) => { a.total += c.total; a.od += c.od; c.bk.forEach((v, i) => a.bk[i] += v); return a; }, { total: 0, od: 0, bk: [0, 0, 0, 0, 0, 0] });
+    $('#tfoot').innerHTML = `<tr><td>Total, ${plural(list.length, 'customer')}</td><td class="n">${ff(t.total)}</td>` +
+      t.bk.map(v => `<td class="n">${cell(v)}</td>`).join('') + `<td class="n">${pct(t.od, t.total).toFixed(0)}%</td><td></td></tr>`;
+    document.querySelectorAll('#thead th').forEach(th => { const on = th.dataset.k === sortKey;
+      th.setAttribute('aria-sort', on ? (sortDir > 0 ? 'ascending' : 'descending') : 'none');
+      th.querySelector('.ar').textContent = on ? (sortDir > 0 ? ' ↑' : ' ↓') : ''; });
+
+    const inv = s.rows.filter(r => r[3] > 0 && (D.custs[r[1]].toLowerCase().includes(q) || String(r[4]).toLowerCase().includes(q)))
+      .sort((a, b) => b[3] - a[3] || b[2] - a[2]);
+    $('#ibody').innerHTML = inv.map(r => `<tr><td>${esc(r[4] || '—')}</td><td class="nm" title="${esc(D.custs[r[1]])}">${esc(D.custs[r[1]])}</td>` +
+      `<td class="n">${ff(r[2])}</td><td class="n"><span class="days"><i class="sw f${bOf(r[3])}"></i>${r[3]}</span></td><td>${BKL[bOf(r[3])]}</td></tr>`).join('')
+      || `<tr><td colspan="5" class="empty">${q ? 'No overdue invoice matches your search.' : 'Nothing is overdue on this date.'}</td></tr>`;
+    $('#nCust').textContent = s.cust.size; $('#nInv').textContent = s.odCount;
+  }
+
+  // ---- tabs ----
+  const tabs = [['#t-cust', '#p-cust'], ['#t-inv', '#p-inv']];
+  tabs.forEach(([t]) => $(t).addEventListener('click', () => tabs.forEach(([t2, p2]) => {
+    const on = t2 === t; $(t2).setAttribute('aria-selected', on); $(p2).hidden = !on; })));
+
+  // ---- page ----
+  function render() {
+    const s = S[sel], p = sel > 0 ? S[sel - 1] : null;
+    $('#sel').value = String(sel);
+    drawHead(s, p); drawStrip(s); drawTrend(); drawCust(s); drawTables();
+    first = false;
+  }
+  $('#sel').innerHTML = D.dates.map((d, i) => `<option value="${i}">${fd(d)}</option>`).reverse().join('');
+  $('#sel').addEventListener('change', e => { sel = +e.target.value; render(); });
+  $('#q').addEventListener('input', e => { query = e.target.value; drawTables(); });
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { drawTrend(); drawCust(S[sel]); }, 150); });
+  const M = D.meta || {};
+  if (M.company) { $('#co').textContent = M.company; $('#co').hidden = false; }
+  $('#days').textContent = plural(D.dates.length, 'report') + ' loaded';
+  if (M.generated) $('#gen').textContent = 'Updated ' + new Date(M.generated).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  render();
+}
+
+// ===================== Unlock: fetch the encrypted data and decrypt it in the browser =====================
+(function () {
+  const $ = s => document.querySelector(s);
+  const KEY = 'ar-dash-key';
+  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const ub64 = u => btoa(String.fromCharCode(...new Uint8Array(u)));
+  const store = { get() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } },
+                  set(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} },
+                  clear() { try { localStorage.removeItem(KEY); } catch (e) {} } };
+  let E = null;
+  async function load() {
+    const r = await fetch('data.enc.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('No data has been published yet. Upload a report to the data repository first.');
+    return r.json();
+  }
+  async function deriveKey(pw) {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64(E.salt), iterations: E.iter, hash: 'SHA-256' },
+      base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
+  }
+  async function open(key) {
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(E.iv) }, key, b64(E.ct));
+    const text = E.gz ? await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text() : new TextDecoder().decode(plain);
+    return JSON.parse(text);
+  }
+  function show(D) { $('#lock').hidden = true; $('#app').hidden = false; document.title = 'Receivables aging'; client(D); }
+  async function tryRemembered() {
+    const s = store.get();
+    if (!s || s.salt !== E.salt) return false;
+    try { show(await open(await crypto.subtle.importKey('raw', b64(s.key), 'AES-GCM', false, ['decrypt']))); return true; }
+    catch (e) { store.clear(); return false; }
+  }
+  async function start() {
+    const btn = $('#ubtn'), err = $('#uerr');
+    const fail = m => { $('#lock').hidden = false; err.textContent = m; btn.disabled = true; };
+    if (!window.crypto || !crypto.subtle) return fail('Open this page through its https:// address to unlock it.');
+    try { E = await load(); } catch (e) { return fail(e.message); }
+    if (await tryRemembered()) return;
+    $('#lock').hidden = false; $('#pw').focus();
+    $('#uform').addEventListener('submit', async ev => {
+      ev.preventDefault(); err.textContent = ''; btn.disabled = true; btn.textContent = 'Opening…';
+      try {
+        const key = await deriveKey($('#pw').value), D = await open(key);
+        if ($('#rm').checked) store.set({ salt: E.salt, key: ub64(await crypto.subtle.exportKey('raw', key)) });
+        show(D);
+      } catch (e) { err.textContent = 'That password is not correct. Try again.'; $('#pw').select(); }
+      finally { btn.disabled = false; btn.textContent = 'Open dashboard'; }
+    });
+  }
+  $('#lockbtn').addEventListener('click', () => { store.clear(); location.reload(); });
+  start();
+})();
+</script>
+</body></html>
